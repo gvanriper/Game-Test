@@ -6,7 +6,7 @@
 	<script type="text/javascript" src="js/phaser.min.js"></script>
     <style type="text/css">
         body {
-            margin: 0;
+             	margin: 0;
         }
     </style>
 </head>
@@ -16,16 +16,18 @@
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
-function preload() {
-
+function preload() 
+{
     game.load.image('sky', 'assets/sky.png');
+    game.load.image('KillScreen', 'assets/Kill Screen.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
-    game.load.spritesheet('Boy', 'assets/Main Character/Boy Walking Left.png', 45.75, 70);
-
+    game.load.spritesheet('Boy', 'assets/Main Character/Boy.png', 53.5789474, 74);
+    game.load.spritesheet('Enemy', 'assets/baddie.png', 32, 32);
 }
 
 var player;
+var enemy;
 var platforms;
 var cursors;
 
@@ -33,11 +35,11 @@ var stars;
 var score = 0;
 var scoreText;
 
-function create() {
-
+function create() 
+{
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
-
+    
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky');
 
@@ -62,8 +64,8 @@ function create() {
 
     ledge = platforms.create(-150, 250, 'ground');
     ledge.body.immovable = true;
-
-    // The player and its settings
+    
+    // Moving Player Left Settings/////////////////////////////////////////////////////////////////
     player = game.add.sprite(400, game.world.height - 150, 'Boy');
 
     //  We need to enable physics on the player
@@ -73,17 +75,33 @@ function create() {
     player.body.bounce.y = 0.2;
     player.body.gravity.y = 300;
     player.body.collideWorldBounds = true;
+        
+    //  Add the animation
+    player.animations.add('left', [],10, true);
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    
+    // Moving Enemy Settings/////////////////////////////////////////////////////////////////
+    enemy = game.add.sprite(100, game.world.height - 150, 'Enemy');
 
-    //  Our two animations, walking left and right.
-    player.animations.add('left', [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],1, true);
-    //player.animations.add('right', [10, 9, 8, 7, 6, 5],10, true);
+    //  We need to enable physics on the player
+    game.physics.arcade.enable(enemy);
 
+    //  Player physics properties. Give the little guy a slight bounce.
+    enemy.body.bounce.y = 0.2;
+    enemy.body.gravity.y = 300;
+    enemy.body.collideWorldBounds = true;
+        
+    //  Add the animation
+    enemy.animations.add('left', [0, 1],10, true);
+    enemy.animations.add('right', [2, 3],10, true);
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    
     //  Finally some stars to collect
     stars = game.add.group();
 
     //  We will enable physics for any star that is created in this group
     stars.enableBody = true;
-
+    
     //  Here we'll create 12 of them evenly spaced apart
     for (var i = 0; i < 12; i++)
     {
@@ -101,19 +119,22 @@ function create() {
     scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
 
     //  Our controls.
-    cursors = game.input.keyboard.createCursorKeys();
-    
+    cursors = game.input.keyboard.createCursorKeys();    
 }
 
-function update() {
-
+function update() 
+{
     //  Collide the player and the stars with the platforms
     game.physics.arcade.collide(player, platforms);
+    game.physics.arcade.collide(enemy, platforms);
     game.physics.arcade.collide(stars, platforms);
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.arcade.overlap(player, stars, collectStar, null, this);
-
+    
+    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+    game.physics.arcade.overlap(player, enemy, CollideEnemy, null, this);
+    
     //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
 
@@ -144,10 +165,10 @@ function update() {
     {
         player.body.velocity.y = -350;
     }
-
 }
 
-function collectStar (player, star) {
+function collectStar (player, star) 
+{
     
     // Removes the star from the screen
     star.kill();
@@ -155,10 +176,58 @@ function collectStar (player, star) {
     //  Add and update the score
     score += 10;
     scoreText.text = 'Score: ' + score;
+}
 
+function CollideEnemy (player, enemy) 
+{
+	//Remove all items from the game.
+    if (game.world) 
+    {
+        game.world.forEach(function (g) 
+        {                        
+            if (g)
+            { 
+            	g.destroy();
+            }
+        },this);
+    }
+    
+    //For some reason these have to be removed manually? I'll need to look into why these are not included in the game.world.
+    platforms.destroy();
+    enemy.destroy();
+    
+    //Function to load up the kill screen image.
+    this.preload = function()
+    {
+    	game.load.image('KillScreen', 'assets/Kill Screen.png');    	
+    };
+    
+    //Now trigger the preload function.
+    this.preload();
+    
+    //Function to show the kill screen.
+    this.create = function()
+    {
+    	game.add.sprite(0, 0, 'KillScreen');
+    };
+    
+    //Now trigger the create function.
+    this.create();
+    
+    //Function to now reload the beginning screen to restart the level.
+    this.update = function()
+    {
+		preload();
+    	create();
+    	update();  
+    };
+    
+    //This puts a delay on running the update function so you see the kill screen.
+    console.log('before');
+    setTimeout(this.update,1500); 
+    console.log('after');
 }
 
 </script>
-
 </body>
 </html>
