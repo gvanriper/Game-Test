@@ -31,6 +31,7 @@ function preload()
 //Player Variables
 var player;
 var playermotion = "";
+var playervelocity = '';
 
 //Enemy Variables
 var enemy;
@@ -90,8 +91,10 @@ function create()
     player.animations.add('right', [42, 43, 44, 45, 46, 47, 48, 49, 50, 51],12, true);
     player.animations.add('stillleft', [28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16],5, true);
     player.animations.add('stillright', [29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41],5, true);
-    player.animations.add('jumpleft', [1, 2, 3, 4, 5],5, true);
-    player.animations.add('jumpright', [42, 43, 44, 45, 46, 47],12, true);   
+    player.animations.add('jumpleft', [1, 2, 3, 4, 5],8, true);
+    player.animations.add('jumpright', [52, 53, 54, 55, 56, 57],8, true);   
+    player.animations.play('stillright');
+    playermotion = 'right';
     ///////////////////////////////////////////////////////////////////////////////////////////////
     
     // Moving Enemy Settings/////////////////////////////////////////////////////////////////
@@ -157,16 +160,34 @@ function update()
        
     //  Move to the left
     if (cursors.left.isDown && player.body.touching.down)
-    {      
-        player.body.velocity.x = -150;
-        player.animations.play('left');     
-        this.LeftMotion();
+    {
+    	//player.body.velocity.x = -50;
+    	//playermotion = 'left';
+    	//player.animations.play('left'); 
+    	
+    	if (player.body.velocity.x != -150 && playervelocity != 'triggered')
+        {       	
+        	playervelocity = 'triggered';
+        	
+    		for (var i = 0; i < 3; i++)
+    		{  	
+    			switch(i) 
+    			{
+    				case 0:
+        				player.body.velocity.x = -50;
+    					playermotion = 'left';
+    					player.animations.play('left'); 
+        				break;
+
+				}    				 			
+        	}  
+        }
     }
     
     if (cursors.left.isDown && ! player.body.touching.down)
     {
     	player.body.velocity.x = -150;
-    	this.LeftMotion();
+    	playermotion = 'left';
     }
     
     //  Move to the right
@@ -174,38 +195,40 @@ function update()
     {     
         player.body.velocity.x = 150;
         player.animations.play('right');     
-        this.RightMotion();
+        playermotion = 'right';
     }
     
     if (cursors.right.isDown && ! player.body.touching.down)
     {     
         player.body.velocity.x = 150;        
-        this.RightMotion();
+        playermotion = 'right';
     }
       
     if (!cursors.right.isDown && !cursors.left.isDown && player.body.touching.down)
     {
         //  Stand still
-        if(playermotion = 'left')
+        if(playermotion == 'left')
     	{
-    		this.LeftMotion();
+    		playermotion = 'left';
     		player.animations.play('stillleft');
+    		//playervelocity = '';
     	}
     	
-    	if(playermotion = 'right')
+    	if(playermotion == 'right')
     	{
-    		this.RightMotion();
+    		playermotion = 'right';
     		player.animations.play('stillright');
+    		//playervelocity = '';
     	}  
     }
     
     //  Allow the player to jump if they are touching the ground.
     if (cursors.up.isDown && player.body.touching.down)
     {
-    	if(playermotion = 'left')
+    	if(playermotion =='left')
     	{
-    		this.LeftMotion();
-    		player.body.velocity.y = -150;
+    		playermotion = 'left';
+    		player.body.velocity.y = -200;
     		player.animations.play('jumpleft');
     		
             player.events.onAnimationLoop.add(function()
@@ -218,10 +241,10 @@ function update()
 			}, this);
     		
     	}
-    	else if(playermotion = 'right')
+    	else if(playermotion == 'right')
     	{
-    		this.RightMotion();
-    		player.body.velocity.y = -150;
+    		playermotion = 'right';
+    		player.body.velocity.y = -200;
     		player.animations.play('jumpright');
     		
     		player.events.onAnimationLoop.add(function()
@@ -229,25 +252,28 @@ function update()
 				console.log(player.animations.currentAnim.loopCount);
 				if (player.animations.currentAnim.loopCount >= 1) {
 					player.animations.stop();
-					player.frame = 0;
+					player.frame = 57;
 				} 
 			}, this);
     	}       
     }
-	
-	this.LeftMotion = function()
-	{
-    	playermotion = "left";
-	};
-
-	this.RightMotion = function()
-	{
-    	playermotion = "right";	
-	};
 }
 
-
-
+function LeftVelocity (i) 
+{  
+	switch(i) 
+    {
+    	case 0:
+        	player.body.velocity.x = -50;
+        	break;
+    	case 1:
+        	player.body.velocity.x = -100;
+        	break;
+        case 2:
+        	player.body.velocity.x = -150;
+        	break;
+	}    	
+};
 
 function collectStar (player, star) 
 {  
@@ -308,8 +334,6 @@ function CollideEnemy (player, enemy)
     setTimeout(this.update,1500); 
     console.log('after');
 }
-
-
 
 </script>
 </body>
